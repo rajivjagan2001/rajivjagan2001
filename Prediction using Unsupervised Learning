@@ -1,0 +1,89 @@
+#PREDICTION USING UNSUPERVISED LEARNING
+#--------------------------------------
+
+getwd() #current working directory
+
+data<-read.csv("Iris.csv")  #Loading the dataset
+head(data)  #seeing the first 6 columns
+tail(data)  #seeing the last 6 columns
+
+str(data)
+summary(data)
+dim(data)
+
+data<-data[,-1]  #removing the id columns because it does not add any value
+
+#checking for duplicate records
+dup<-duplicated(data)
+sum(dup==FALSE)  
+sum(dup==TRUE) #3 duplicate records
+
+data<-data[!dup,] #removing the duplicate records
+
+#count plot for species feature
+
+table(data$Species)
+count<-table(data$Species)
+barplot(count,horiz=TRUE)
+
+
+#correlation between the features
+
+library(ggcorrplot)
+cor_mat<-cor(data)
+cor_mat
+ggcorrplot(cor_mat)
+
+#visualisation
+
+stripchart(SepalLengthCm~Species,data=data,main="Sepal Length for Species",xlab="Sepal Length",ylab="Species",col=c("red","orange","blue"),group.names=c("Iris-setosa","Iris-versicolor","Iris-virginica"),vertical=TRUE,pch=16)
+boxplot(SepalWidthCm~Species,data=data,col=c("red","orange","blue"),group.names=c("setosa","virginica","versicolour"))
+boxplot(PetalWidthCm~Species,data=data,col=c("red","orange","blue"),group.names=c("setosa","virginica","versicolour"))
+boxplot(PetalLengthCm~Species,data=data,col=c("red","orange","blue"),group.names=c("setosa","virginica","versicolour"))
+ 
+#converting the species feature into categories where setosa=1,versicolor=2 and virginica=3
+
+l<-nrow(data)
+for(i in 1:l)
+{
+if(data$Species[i]=="Iris-setosa")
+{
+data$species[i]=1
+}
+else if(data$Species[i]=="Iris-versicolor")
+{
+data$species[i]=2
+}
+else 
+{
+data$species[i]=3
+}
+}
+data<-data[,-5]
+
+#k-means Clustering
+
+k.max<-10
+scaled.data<-scale(data[,-5])
+
+wss<-sapply(1:k.max,function(k){kmeans(scaled.data,k,nstart=50,iter.max=15)$tot.withinss}) #elbow method
+wss
+plot(1:k.max,wss,type="b",pch=19,frame=FALSE,xlab="Number of Clusters",ylab="WSS")
+
+#from the plot it is clear that the error increases like a elbow when the number of clusters moves from 3 to 4
+#so we keep the number of clusters equal to 3.
+
+model_kmeans<-kmeans(scaled.data,centers=3,nstart=25)
+model_kmeans$size
+table(model_kmeans$cluster,data$species)
+
+library(cluster)
+clusplot(pam(data[,-5],3))
+clusplot(pam(model_kmeans$cluster,3))
+
+#accuracy
+accuracy<-mean(data$species==model_kmeans$cluster)
+accuracy
+#error
+error<-1-accuracy
+error
