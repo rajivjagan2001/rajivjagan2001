@@ -1,0 +1,59 @@
+getwd()
+#DOWNLOADING THE DATA FROM THE WEB
+
+url<-"https://raw.githubusercontent.com/AdiPersonalWorks/Random/master/student_scores%20-%20student_scores.csv"
+dest<-"student_scores.csv"
+download.file(url,dest)
+
+#LOADING THE DATASET FROM THE DESTINATION LOCATION
+
+data<-read.csv("student_scores.csv")
+head(data)
+nrow(data)  #25 rows
+ncol(data)  #2 columns
+str(data)
+summary(data)
+
+plot(data$Scores~data$Hours)  #there is a positive correlation between the hours and scores
+
+library(ggcorrplot)
+cor_mat<-cor(data)
+cor_mat
+ggcorrplot(cor_mat)  #their correlation value is about 97%
+
+hist(data$Scores)  #performance of the students
+sum(data$Scores>0 & data$Scores<40)
+sum(data$Scores>=0 & data$Scores<=50)
+sum(data$Scores>50 & data$Scores<=100) 
+
+hist(data$Hours)
+
+#SPLITING THE DATASET INTO TRAINING AND TESTING IN THE RATIO OF 80:20
+
+id<-sample(2,nrow(data),prob=c(0.8,0.2),replace=TRUE)
+sum(id==1)
+sum(id==2)
+train<-data[id==1,]  #20 observations
+test<-data[id==2,]   #5 observations
+
+#BUILDING MODELS
+#---------------
+
+#linear regression
+
+model1<-lm(Scores~.,data=train)
+model1
+summary(model1)
+result1<-predict(model1,test)
+result1
+test$Scores
+
+  
+Hours<-9.25
+prediction_of_score<-data.frame(Hours)
+prediction_of_score
+
+score<-predict(model1,prediction_of_score)
+score
+
+print(paste("The predicted score of a student if he studies for 9.25 hrs/day : ",score))
