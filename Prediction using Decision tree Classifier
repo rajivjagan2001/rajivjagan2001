@@ -1,0 +1,89 @@
+#PREDICTION USING DECISION TREE ALGORITHM
+#----------------------------------------
+
+#loading the dataset
+data<-read.csv("Iris.csv")
+head(data)
+tail(data)
+
+#checking for duplicates
+dup<-duplicated(data)
+sum(dup==TRUE)  #No duplicate records present in the  dataset
+
+#getting statistical details and data types of the dataset
+summary(data)
+str(data)
+
+unique(data$Species)
+data<-data[,-1]  #removing the id column
+
+table(data$Species)  #value count for each species
+species<-table(data$Species)
+barplot(species,horiz=T)
+
+#visualizing the correlation between the variables
+
+library(ggcorrplot)
+cor_mat<-cor(data[,-5])
+cor_mat
+ggcorrplot(cor_mat) #heatmap for correlation matrix
+
+#converting the string in Species feature into numerical categories as machine learning model work on numerical data
+l<-nrow(data)
+for(i in 1:l)
+{
+if(data$Species[i]=="Iris-setosa")
+{
+data$Species_cat[i]=1
+}
+else if(data$Species[i]=="Iris-versicolor")
+{
+data$Species_cat[i]=2
+}
+else
+{
+data$Species_cat[i]=3
+}
+}
+head(data)
+tail(data)
+data<-data[,-5] #removing the species column
+
+pairs(data)  #As it is clear from this plot iris-setosa forms a seperate cluster
+
+#Spliting the dataset into training and testing data in the ratio of 75:25
+
+id<-sample(2,nrow(data),prob=c(0.75,0.25),replace=TRUE)
+id
+train<-data[id==1,]
+test<-data[id==2,]
+nrow(train)
+nrow(test)
+
+#Spliting the independent and dependent variables in the training and testing dataset
+
+train_X<-train[,-5]
+train_Y<-train$Species_cat
+test_X<-test[,-5]
+test_Y<-test$Species_cat
+
+#Model Building using Decision Tree Classifier
+
+library(rpart)
+library(rpart.plot)
+model<-rpart(train_Y~.,data=train_X,method="class")
+model
+rpart.plot(model,extra=106)
+
+result<-predict(model,newdata=test_X,type="class")
+
+#confusion matrix
+table(test_Y,result)
+
+#Accuracy
+accuracy<-mean(test_Y==result)
+accuarcy
+#Error
+error<-mean(test_Y!=result)
+error
+
